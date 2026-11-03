@@ -58,5 +58,19 @@ jobs:
             -destination "$DESTINATION" \
             -derivedDataPath build/DerivedData \
             -only-testing:TheUnwrittenMarginTests \
+            -resultBundlePath build/TestResults.xcresult \
             CODE_SIGNING_ALLOWED=NO \
             | xcbeautify --renderer github-actions
+
+      # xcbeautify names a failing Swift Testing test but drops the failure
+      # message, so read it from the result bundle and post it as an annotation.
+      - name: Report test failures
+        if: failure()
+        run: |
+          [ -d build/TestResults.xcresult ] || exit 0
+          xcrun xcresulttool get test-results summary --path build/TestResults.xcresult --compact \
+            | python3 -c '
+          import json, sys
+          for f in json.load(sys.stdin).get("testFailures", []):
+              print("::error title=%s/%s::%s" % (f["targetName"], f["testName"], f["failureText"]))
+          '
