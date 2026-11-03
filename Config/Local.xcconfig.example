@@ -1,0 +1,12 @@
+// Local.xcconfig: settings for this Mac only. Git-ignored; never commit it.
+//
+// To set up:
+//   cp Config/Local.xcconfig.example Config/Local.xcconfig
+// Then replace the placeholder with your 10-character team ID.
+// Find it at developer.apple.com > Account > Membership details,
+// or in Xcode > Settings > Accounts.
+//
+// Don't pick a Team in Xcode's Signing & Capabilities tab. That writes
+// DEVELOPMENT_TEAM into project.pbxproj, which is committed.
+
+DEVELOPMENT_TEAM = YOUR_TEAM_ID

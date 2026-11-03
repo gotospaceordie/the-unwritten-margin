@@ -60,3 +60,10 @@ fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
+
+# The Unwritten Margin
+# Per-Mac settings such as the signing team ID (see Config/Local.xcconfig.example)
+Config/Local.xcconfig
+.DS_Store
+build/
+DerivedData/

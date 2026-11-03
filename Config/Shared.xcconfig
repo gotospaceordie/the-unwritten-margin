@@ -1,0 +1,12 @@
+// Shared.xcconfig: project-wide build settings, committed to git.
+//
+// Debug and Release both use this file as their base configuration
+// (Project > Info > Configurations in Xcode).
+//
+// Your signing team ID must NOT go here or in project.pbxproj, because
+// this repository is public. Put it in Config/Local.xcconfig instead.
+// That file is git-ignored. Copy Config/Local.xcconfig.example to create it.
+// The "?" makes the include optional, so CI and fresh clones still build
+// without the file.
+
+#include? "Local.xcconfig"
