@@ -27,7 +27,30 @@ When two of these conflict, the higher one wins.
 - No server, no third-party SDKs, no analytics, no paid services unless an issue says so and Paul agreed.
 - Check current Apple documentation for APIs; do not rely on memory for availability or deployment targets.
 
-Build and test commands: _to be filled in once the Xcode project exists._
+### Build and test commands
+
+Run these from the repository root. The simulator is the iPhone 17 Pro Max (iOS 26.5 runtime), the closest one to Paul's iPhone 16 Pro Max. Xcode 26.6 ships no iPhone 16 simulator. Minimum deployment target: iOS 26.0.
+
+```bash
+# Build for the simulator
+xcodebuild build -project TheUnwrittenMargin.xcodeproj -scheme TheUnwrittenMargin \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro Max,OS=26.5' -derivedDataPath build/DerivedData
+
+# Unit tests only (Swift Testing), about 30 s
+xcodebuild test -project TheUnwrittenMargin.xcodeproj -scheme TheUnwrittenMargin \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro Max,OS=26.5' -derivedDataPath build/DerivedData \
+  -only-testing:TheUnwrittenMarginTests
+
+# All tests, unit plus UI (XCTest), about 3 min
+xcodebuild test -project TheUnwrittenMargin.xcodeproj -scheme TheUnwrittenMargin \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro Max,OS=26.5' -derivedDataPath build/DerivedData
+```
+
+`build/` is git-ignored.
+
+### Signing and the team ID
+
+The signing team ID lives only in `Config/Local.xcconfig`, which is git-ignored (see `Config/Local.xcconfig.example`). `Config/Shared.xcconfig` includes it optionally. Never set a Team in Xcode's Signing & Capabilities tab, because that writes `DEVELOPMENT_TEAM` into the committed `project.pbxproj`.
 
 ## About Paul
 
@@ -37,7 +60,7 @@ Quiet hours: midnight to 8am US Central. Hold anything non-urgent.
 
 ## Never do
 
-1. **Never push secrets. Always check before pushing.** This repository is public. Before every `git push`, review the full diff (`git diff origin/main...HEAD`) for: API keys, tokens, passwords, `.p12`/`.mobileprovision`/`.cer` files, `.env` files, signing team IDs in plain config, email addresses, and personal data. If anything looks sensitive, stop and ask Paul. GitHub push protection is a backstop, not a substitute.
+1. **Never push secrets. Always check before pushing.** This repository is public. Before every `git push`, review the full diff (`git diff origin/main...HEAD`) for: API keys, tokens, passwords, `.p12`/`.mobileprovision`/`.cer` files, `.env` files, signing team IDs in plain config, email addresses, and personal data. Also run `git grep -n DEVELOPMENT_TEAM -- '*.pbxproj'`, which must print nothing, and `git ls-files Config/`, which must not list `Local.xcconfig`. If anything looks sensitive, stop and ask Paul. GitHub push protection is a backstop, not a substitute.
 2. **Never commit real reading data.** No real photographs of pages, no copyrighted book text, no personal reflections. Fixtures and screenshots use synthetic or public-domain text only.
 3. **Never fabricate.** No invented OCR text, book metadata, page numbers, or test results. Unknown stays unknown.
 4. **Never claim what you didn't run.** Say "built on simulator X", "tested on device", or "not run" exactly as it happened.
