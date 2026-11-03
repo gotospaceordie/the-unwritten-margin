@@ -10,3 +10,8 @@ struct TheUnwrittenMarginTests {
     }
 
 }
+
+// THROWAWAY: proves CI fails on a failing test (issue #2). Never merge.
+@Test func deliberatelyFailingForCIProof() {
+    #expect(1 == 2)
+}
