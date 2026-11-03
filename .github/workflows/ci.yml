@@ -1,0 +1,76 @@
+# CI: build the app and run its unit tests on an iPhone simulator.
+# Runs on every pull request and on every push to main.
+# Uses no secrets and no code signing (simulator builds don't need signing).
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Read-only token: this workflow never writes to the repository.
+permissions:
+  contents: read
+
+# A newer push to the same branch or PR cancels the run still in progress.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  XCODE_APP: /Applications/Xcode_26.6.app
+  DESTINATION: platform=iOS Simulator,name=iPhone 17 Pro Max,OS=26.5
+
+jobs:
+  build-and-test:
+    name: Build and unit tests
+    runs-on: macos-26
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Select Xcode 26.6
+        run: |
+          sudo xcode-select -s "$XCODE_APP"
+          xcodebuild -version
+          xcrun simctl list runtimes
+
+      - name: Build
+        run: |
+          set -o pipefail
+          xcodebuild build-for-testing \
+            -project TheUnwrittenMargin.xcodeproj \
+            -scheme TheUnwrittenMargin \
+            -destination "$DESTINATION" \
+            -derivedDataPath build/DerivedData \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcbeautify --renderer github-actions
+
+      - name: Unit tests
+        run: |
+          set -o pipefail
+          xcodebuild test-without-building \
+            -project TheUnwrittenMargin.xcodeproj \
+            -scheme TheUnwrittenMargin \
+            -destination "$DESTINATION" \
+            -derivedDataPath build/DerivedData \
+            -only-testing:TheUnwrittenMarginTests \
+            -resultBundlePath build/TestResults.xcresult \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcbeautify --renderer github-actions
+
+      # xcbeautify names a failing Swift Testing test but drops the failure
+      # message, so read it from the result bundle and post it as an annotation.
+      - name: Report test failures
+        if: failure()
+        run: |
+          [ -d build/TestResults.xcresult ] || exit 0
+          xcrun xcresulttool get test-results summary --path build/TestResults.xcresult --compact \
+            | python3 -c '
+          import json, sys
+          for f in json.load(sys.stdin).get("testFailures", []):
+              print("::error title=%s/%s::%s" % (f["targetName"], f["testName"], f["failureText"]))
+          '
