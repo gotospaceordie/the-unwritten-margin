@@ -48,6 +48,20 @@ xcodebuild test -project TheUnwrittenMargin.xcodeproj -scheme TheUnwrittenMargin
 
 `build/` is git-ignored.
 
+To run on Paul's iPhone, press ⌘R in Xcode with the iPhone selected as the run destination, or use the command line. This needs `Config/Local.xcconfig` with Paul's team ID, the phone plugged in or on the same Wi-Fi, and Developer Mode on.
+
+```bash
+# Find the iPhone's id
+xcodebuild -project TheUnwrittenMargin.xcodeproj -scheme TheUnwrittenMargin -showdestinations | grep 'platform:iOS,'
+# Build and sign for it (creates or updates the development profile if needed)
+xcodebuild build -project TheUnwrittenMargin.xcodeproj -scheme TheUnwrittenMargin \
+  -destination 'platform=iOS,id=<device id>' -derivedDataPath build/DeviceData -allowProvisioningUpdates
+# Install it (the device id for devicectl comes from `xcrun devicectl list devices`)
+xcrun devicectl device install app --device <devicectl id> build/DeviceData/Build/Products/Debug-iphoneos/TheUnwrittenMargin.app
+```
+
+If signing fails with "PLA Update available", Paul must accept the updated Program License Agreement for his own team at developer.apple.com/account. Apple can take a few minutes to register the acceptance.
+
 ### Signing and the team ID
 
 The signing team ID lives only in `Config/Local.xcconfig`, which is git-ignored (see `Config/Local.xcconfig.example`). `Config/Shared.xcconfig` includes it optionally. Never set a Team in Xcode's Signing & Capabilities tab, because that writes `DEVELOPMENT_TEAM` into the committed `project.pbxproj`.
