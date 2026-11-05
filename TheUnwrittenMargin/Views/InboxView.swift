@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Things to finish later: pages saved with "Save photo now" and passages
+/// Things to finish later: pages kept with "Finish later" and passages
 /// saved without a page label.
 struct InboxView: View {
     @Environment(AppModel.self) private var model
@@ -22,7 +22,7 @@ struct InboxView: View {
                     } header: {
                         Text("Photos to finish")
                     } footer: {
-                        Text("Saved with Save photo now. Choose the words and add a page when you have a moment.")
+                        Text("Kept with Finish later. Add the page and your thoughts when you have a moment.")
                     }
                 }
 
@@ -47,7 +47,8 @@ struct InboxView: View {
             .navigationDestination(for: IncompleteCapture.self) { capture in
                 if let page = SampleContent.page(id: capture.pageID) {
                     PassageEditorView(
-                        draft: PassageDraft(bookID: capture.bookID, quotation: page.text, completesCaptureID: capture.id)
+                        draft: PassageDraft(bookID: capture.bookID, quotation: page.text, completesCaptureID: capture.id),
+                        mode: .finishing
                     ) {
                         path.removeAll()
                     }

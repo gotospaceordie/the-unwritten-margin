@@ -24,6 +24,29 @@ final class CaptureFlowUITests: XCTestCase {
     }
 
     @MainActor
+    func testCancelAsksBeforeDiscardingTypedText() throws {
+        let app = XCUIApplication()
+        app.launch()
+        app.buttons["captureButton"].tap()
+
+        let reflection = app.textFields["reflectionField"]
+        XCTAssertTrue(reflection.waitForExistence(timeout: 5))
+        reflection.tap()
+        reflection.typeText("A thought")
+        app.buttons["cancelPassage"].tap()
+
+        let keepEditing = app.buttons["Keep editing"]
+        XCTAssertTrue(keepEditing.waitForExistence(timeout: 5))
+        keepScreenshot(of: app, named: "default-5-discard")
+        keepEditing.tap()
+        XCTAssertEqual(reflection.value as? String, "A thought")
+
+        app.buttons["cancelPassage"].tap()
+        app.buttons["Discard"].tap()
+        XCTAssertTrue(app.buttons["captureButton"].waitForExistence(timeout: 5))
+    }
+
+    @MainActor
     private func runCaptureFlow(in app: XCUIApplication, screenshotPrefix: String) throws {
         let capture = app.buttons["captureButton"]
         XCTAssertTrue(capture.waitForExistence(timeout: 10))
@@ -31,21 +54,24 @@ final class CaptureFlowUITests: XCTestCase {
         keepScreenshot(of: app, named: "\(screenshotPrefix)-1-books")
 
         capture.tap()
-        let useThisPage = app.buttons["useThisPage"]
-        XCTAssertTrue(useThisPage.waitForExistence(timeout: 5))
-        XCTAssertTrue(app.buttons["savePhotoNow"].exists)
-        keepScreenshot(of: app, named: "\(screenshotPrefix)-2-capture")
-
-        useThisPage.tap()
         let save = app.buttons["savePassage"]
         XCTAssertTrue(save.waitForExistence(timeout: 5))
-        // At the largest text sizes the page field starts below the fold.
+        XCTAssertTrue(app.buttons["cancelPassage"].exists)
+        keepScreenshot(of: app, named: "\(screenshotPrefix)-2-new-passage")
+
+        // At the largest text sizes the page field and Finish later start below
+        // the fold, and may not fit on screen together.
         let pageField = app.textFields["pageLabelField"]
-        for _ in 0..<5 where !pageField.exists {
+        for _ in 0..<6 where !pageField.exists {
             app.swipeUp()
         }
         XCTAssertTrue(pageField.exists)
-        keepScreenshot(of: app, named: "\(screenshotPrefix)-3-editor")
+        let finishLater = app.buttons["finishLater"]
+        for _ in 0..<6 where !finishLater.exists {
+            app.swipeUp()
+        }
+        XCTAssertTrue(finishLater.exists)
+        keepScreenshot(of: app, named: "\(screenshotPrefix)-3-new-passage-scrolled")
 
         save.tap()
         XCTAssertTrue(capture.waitForExistence(timeout: 5))

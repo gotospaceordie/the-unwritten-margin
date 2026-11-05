@@ -63,11 +63,11 @@ struct CaptureToSaveTests {
         #expect(!saved.quotation.contains("My own thought"))
     }
 
-    @Test func savePhotoNowPutsAnIncompleteCaptureInTheInbox() throws {
+    @Test func keepForLaterPutsAnIncompleteCaptureInTheInbox() throws {
         let model = try makeModel()
         let page = try #require(SampleContent.page(forBook: walden.id))
 
-        let capture = try model.savePhotoNow(page)
+        let capture = try model.keepForLater(page)
 
         #expect(model.incompleteCaptures.map(\.id) == [capture.id])
         #expect(capture.bookID == walden.id)
@@ -77,7 +77,7 @@ struct CaptureToSaveTests {
     @Test func finishingAnIncompleteCaptureSavesThePassageAndClearsTheInboxItem() throws {
         let model = try makeModel()
         let page = try #require(SampleContent.page(forBook: walden.id))
-        let capture = try model.savePhotoNow(page)
+        let capture = try model.keepForLater(page)
         var draft = PassageDraft(bookID: capture.bookID, quotation: page.text, completesCaptureID: capture.id)
         draft.pageInput = "90"
 
@@ -98,6 +98,31 @@ struct CaptureToSaveTests {
         #expect(model.passages(for: mobyDick.id).isEmpty)
     }
 
+    @Test func changingTheBookOfADraftKeepsThePageLabelAndReflection() throws {
+        let mobyDickPage = try #require(SampleContent.page(forBook: mobyDick.id))
+        var draft = PassageDraft(bookID: walden.id, quotation: "A sample sentence.")
+        draft.pageInput = "xiv"
+        draft.reflectionInput = "My own thought."
+
+        draft.switchBook(to: mobyDickPage)
+
+        #expect(draft.bookID == mobyDick.id)
+        #expect(draft.quotation == mobyDickPage.text)
+        #expect(draft.pageInput == "xiv")
+        #expect(draft.reflectionInput == "My own thought.")
+    }
+
+    @Test func aDraftCountsAsEditedOnlyOnceTheReaderTypesSomething() {
+        var draft = PassageDraft(bookID: walden.id, quotation: "A sample sentence.")
+        #expect(!draft.hasReaderInput)
+
+        draft.reflectionInput = "  "
+        #expect(!draft.hasReaderInput)
+
+        draft.pageInput = "7"
+        #expect(draft.hasReaderInput)
+    }
+
     @Test func aFailedSaveStoresNothingAndThrows() throws {
         let model = try makeModel(passages: FailingPassageRepository())
 
@@ -111,7 +136,7 @@ struct CaptureToSaveTests {
         let repository = FailingPassageRepository()
         let model = try makeModel(passages: repository)
         let page = try #require(SampleContent.page(forBook: walden.id))
-        let capture = try model.savePhotoNow(page)
+        let capture = try model.keepForLater(page)
 
         #expect(throws: FailingPassageRepository.WriteFailed.self) {
             try model.savePassage(PassageDraft(bookID: walden.id, quotation: page.text, completesCaptureID: capture.id))

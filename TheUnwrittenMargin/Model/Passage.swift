@@ -12,7 +12,7 @@ struct Passage: Identifiable, Hashable, Sendable {
     let createdAt: Date
 }
 
-/// A page saved with "Save photo now", waiting in the Inbox to be finished.
+/// A page kept with "Finish later", waiting in the Inbox to be finished.
 struct IncompleteCapture: Identifiable, Hashable, Sendable {
     let id: UUID
     let bookID: BookEdition.ID
@@ -28,6 +28,19 @@ struct PassageDraft: Hashable, Sendable {
     var reflectionInput = ""
     /// Set when the draft finishes an Inbox item, which is removed once the passage saves.
     var completesCaptureID: IncompleteCapture.ID?
+
+    /// True once the reader has typed a page label or a reflection.
+    var hasReaderInput: Bool {
+        !pageInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            || !reflectionInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    /// Moves the draft to another book's page. The reader's page label and
+    /// reflection are kept: changing the book never discards notes.
+    mutating func switchBook(to page: SamplePage) {
+        bookID = page.bookID
+        quotation = page.text
+    }
 
     func makePassage(id: UUID = UUID(), createdAt: Date) -> Passage {
         let hasReflection = !reflectionInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty

@@ -24,7 +24,7 @@ struct RootView: View {
                 isCapturing = true
             }
         }
-        .fullScreenCover(isPresented: $isCapturing) {
+        .sheet(isPresented: $isCapturing) {
             CaptureView()
                 .environment(model)
         }

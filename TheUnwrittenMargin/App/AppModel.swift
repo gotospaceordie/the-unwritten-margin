@@ -75,9 +75,9 @@ final class AppModel {
         return passage
     }
 
-    /// The quick path: keep the page and its book now, finish it later from the Inbox.
+    /// The quick path ("Finish later"): keep the page and its book now, finish it from the Inbox.
     @discardableResult
-    func savePhotoNow(_ page: SamplePage) throws -> IncompleteCapture {
+    func keepForLater(_ page: SamplePage) throws -> IncompleteCapture {
         let capture = IncompleteCapture(id: UUID(), bookID: page.bookID, pageID: page.id, createdAt: now())
         try passageRepository.save(capture)
         try reload()
